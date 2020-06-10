@@ -179,7 +179,12 @@ public:
 	
 	void onButtonPressUp(int pinNum, unsigned long pressDuration)
 	{
-		Serial.println("Press duration for pinNum:" + String(pinNum) + " duration: " + String(pressDuration));
+		String arr;
+		if(m_buttonDownTotalMillis != 0) arr += "1"; else arr += "0";
+		if(m_buttonSTotalMillis != 0) arr += "1"; else arr += "0";
+		if(m_buttonRightTotalMillis != 0) arr += "1"; else arr += "0";
+		
+		Serial.println("Press duration for pinNum:" + String(pinNum) + " duration: " + String(pressDuration) + " " + arr);
 		if(m_buttonDownDetector->getPinNum() == pinNum)
 		{
 			m_buttonDownTotalMillis = pressDuration;
@@ -191,10 +196,10 @@ public:
 			)
 			{
 				m_onDownPressed();
-				
-				m_buttonDownTotalMillis = 0;
-				return;
 			}
+			
+			m_buttonDownTotalMillis = 0;
+			return;
 		}
 		else if(m_buttonRightDetector->getPinNum() == pinNum)
 		{
@@ -207,10 +212,10 @@ public:
 			)
 			{
 				m_onRightPressed();
-				
-				m_buttonRightTotalMillis = 0;
-				return;
 			}
+						
+			m_buttonRightTotalMillis = 0;
+			return;
 		}
 		else if(m_buttonSDetector->getPinNum() == pinNum)
 		{
@@ -224,27 +229,28 @@ public:
 			)
 			{
 				m_onSPressed();
-				
-				m_buttonSTotalMillis = 0;
-				return;
 			}
 			
+			m_buttonSTotalMillis = 0;
+			return;
 		}
 
 		if( m_buttonDownTotalMillis != 0 && m_buttonRightTotalMillis != 0 && m_buttonSTotalMillis == 0)
 		{
-			if(m_buttonDownTotalMillis > BUTTON_COMBO_CLICK_HOLD_DURATION && m_buttonRightTotalMillis > BUTTON_COMBO_CLICK_HOLD_DURATION)  		
+			if(m_buttonDownTotalMillis > BUTTON_COMBO_CLICK_HOLD_DURATION && m_buttonRightTotalMillis > BUTTON_COMBO_CLICK_HOLD_DURATION) 
+			{				
 				m_onCalibrationComboPressed();
+			}
 			
 			m_buttonDownTotalMillis = 0;
 			m_buttonRightTotalMillis = 0;
-			
 			return;
 		}
 	}
 	
 	void onButtonPressDown(int pinNum)
 	{
+		Serial.println("Press down for pinNum:" + String(pinNum));
 		if(m_buttonDownDetector->getPinNum() == pinNum)
 			m_buttonDownTotalMillis = 0;
 		if(m_buttonRightDetector->getPinNum() == pinNum)
