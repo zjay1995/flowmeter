@@ -2,6 +2,7 @@
 
 Wiring:
 
+--------
 ADS1115 - SDA  <--> ESP32 5
 ADS1115 - SCL  <--> ESP32 4
 ADS1115 - VDD  <--> ESP32 5V
