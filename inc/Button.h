@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <functional>
 
+#include "Globals.h"
 #include "pins.h"
 
 class ButtonPressListener 
@@ -156,9 +157,9 @@ public:
 
 	Keyboard()
 	{
-		m_buttonDownDetector = new DigitalReadSingleButtonPressDetector(BUTTON_DOWN_PIN);
-		m_buttonSDetector = new DigitalReadSingleButtonPressDetector(BUTTON_S_PIN);
-		m_buttonRightDetector = new DigitalReadSingleButtonPressDetector(BUTTON_RIGHT_PIN);
+		m_buttonDownDetector = new DigitalReadSingleButtonPressDetector(c_BUTTON_DOWN_PIN);
+		m_buttonSDetector = new DigitalReadSingleButtonPressDetector(c_BUTTON_S_PIN);
+		m_buttonRightDetector = new DigitalReadSingleButtonPressDetector(c_BUTTON_RIGHT_PIN);
 		
 		m_buttonDownDetector->addListener(this);
 		m_buttonSDetector->addListener(this);
@@ -189,41 +190,37 @@ public:
 		{
 			m_buttonDownTotalMillis = pressDuration;
 			if(
-				pressDuration > BUTTON_SINGLE_CLICK_HOLD_DURATION && 
-				pressDuration < BUTTON_SINGLE_CLICK_HOLD_DURATION + 200 &&
+				pressDuration > c_BUTTON_SINGLE_CLICK_HOLD_DURATION &&
+				pressDuration < c_BUTTON_SINGLE_CLICK_HOLD_DURATION + 200 &&
 				m_buttonRightTotalMillis == 0 && 
 				m_buttonSTotalMillis == 0
 			)
 			{
 				m_onDownPressed();
+				m_buttonDownTotalMillis = 0;
 			}
-			
-			m_buttonDownTotalMillis = 0;
-			return;
 		}
 		else if(m_buttonRightDetector->getPinNum() == pinNum)
 		{
 			m_buttonRightTotalMillis = pressDuration;
 			if(
-				pressDuration > BUTTON_SINGLE_CLICK_HOLD_DURATION && 
-				pressDuration < BUTTON_SINGLE_CLICK_HOLD_DURATION + 200 &&
+				pressDuration > c_BUTTON_SINGLE_CLICK_HOLD_DURATION &&
+				pressDuration < c_BUTTON_SINGLE_CLICK_HOLD_DURATION + 200 &&
 				m_buttonSTotalMillis == 0 && 
 				m_buttonDownTotalMillis == 0
 			)
 			{
 				m_onRightPressed();
+				m_buttonRightTotalMillis = 0;
 			}
-						
-			m_buttonRightTotalMillis = 0;
-			return;
 		}
 		else if(m_buttonSDetector->getPinNum() == pinNum)
 		{
 			m_buttonSTotalMillis = pressDuration;
 			
 			if(
-				pressDuration > BUTTON_SINGLE_CLICK_HOLD_DURATION && 
-				pressDuration < BUTTON_SINGLE_CLICK_HOLD_DURATION + 200 &&
+				pressDuration > c_BUTTON_SINGLE_CLICK_HOLD_DURATION &&
+				pressDuration < c_BUTTON_SINGLE_CLICK_HOLD_DURATION + 200 &&
 				m_buttonRightTotalMillis == 0 && 
 				m_buttonDownTotalMillis == 0
 			)
@@ -235,9 +232,12 @@ public:
 			return;
 		}
 
+		Serial.println("D" + String(m_buttonDownTotalMillis) + " D: " + String(m_buttonSTotalMillis) + " R: " + String(m_buttonRightTotalMillis));
+
+
 		if( m_buttonDownTotalMillis != 0 && m_buttonRightTotalMillis != 0 && m_buttonSTotalMillis == 0)
 		{
-			if(m_buttonDownTotalMillis > BUTTON_COMBO_CLICK_HOLD_DURATION && m_buttonRightTotalMillis > BUTTON_COMBO_CLICK_HOLD_DURATION) 
+			if(m_buttonDownTotalMillis > c_BUTTON_COMBO_CLICK_HOLD_DURATION && m_buttonRightTotalMillis > c_BUTTON_COMBO_CLICK_HOLD_DURATION)
 			{				
 				m_onCalibrationComboPressed();
 			}

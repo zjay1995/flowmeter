@@ -3,6 +3,8 @@
 #include "GasManager.h"
 #include "MenuRenderer.h"
 #include "SleepTimer.h"
+#include "DataLogger.h"
+#include "TimeSync.h"
 
 class Menu 
 {
@@ -99,6 +101,119 @@ public:
 		m_sleepTimer->selectIntervalByIndex(m_intervalIndex);
 	}
 	
+};
+
+class DataLoggerFlashStoreMenuItem : public Menu 
+{
+	DataLogger* m_dataLogger;
+	
+public:	
+
+	DataLoggerFlashStoreMenuItem(String name, String parentName, DataLogger* dataLogger, MenuRenderer* renderer) 
+		: Menu(name, parentName, renderer),
+		m_dataLogger(dataLogger)
+	{
+
+	}
+
+	void action()
+	{
+		if( m_dataLogger->isFlashStoreSessionRunning() )
+			m_dataLogger->stopFlashStoreSession();
+		else
+			m_dataLogger->startFlashStoreSession();
+	}
+	
+};
+
+class WiFiDumpMenuItem : public Menu
+{
+	DataLogger* m_dataLogger;
+
+public:
+
+	WiFiDumpMenuItem(String name, String parentName, DataLogger* dataLogger, MenuRenderer* renderer)
+		: Menu(name, parentName, renderer),
+		m_dataLogger(dataLogger)
+	{
+
+	}
+
+	void action()
+	{
+		if (m_dataLogger->isWiFiDumpRunning())
+			m_dataLogger->stopWiFiDumpSession();
+		else
+			m_dataLogger->startWiFiDumpSession();
+	}
+
+};
+
+class WiFiRealTimeDumpMenuItem : public Menu
+{
+	DataLogger* m_dataLogger;
+
+public:
+
+	WiFiRealTimeDumpMenuItem(String name, String parentName, DataLogger* dataLogger, MenuRenderer* renderer)
+		: Menu(name, parentName, renderer),
+		m_dataLogger(dataLogger)
+	{
+
+	}
+
+	void action()
+	{
+		if (m_dataLogger->isWiFiRealTimeDumpRunning())
+			m_dataLogger->stopWiFiRealTimeDumpSession();
+		else
+			m_dataLogger->startWiFiRealTimeDumpSession();
+	}
+
+};
+
+class NTPSyncMenuItem : public Menu
+{
+
+	TimeSync* m_timeSync;
+
+public:
+
+	NTPSyncMenuItem(String name, String parentName, TimeSync* timeSync, MenuRenderer* renderer)
+		: Menu(name, parentName, renderer)
+	{
+		m_timeSync = timeSync;
+	}
+
+	void action()
+	{
+		if(!m_timeSync->isNTCSyncRunning())
+			m_timeSync->startNTPSync();
+		else
+		{
+			m_timeSync->stopNTPSync();
+		}
+		
+	}
+
+};
+
+class ShowTimeMenuItem : public Menu
+{
+
+public:
+
+	ShowTimeMenuItem(String name, String parentName, MenuRenderer* renderer)
+		: Menu(name, parentName, renderer)
+	{
+
+	}
+
+	void action()
+	{
+
+	}
+
 };
 
 class CompositeMenu : public Menu

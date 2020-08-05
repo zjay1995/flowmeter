@@ -24,7 +24,7 @@ public:
 
 	SleepTimer(SSD1306Wire* display) : m_display(display)
 	{
-		
+		m_selectedIndex = 4;
 	}
 	
 	~SleepTimer()=default;

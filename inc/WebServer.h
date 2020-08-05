@@ -3,6 +3,9 @@
 #include "GasManager.h"
 #include <vector>
 
+#include "Globals.h"
+#include "ConfigurationManager.h"
+
 #define DEBUG_PRINT_ON
 
 class WebServer
@@ -18,6 +21,9 @@ class WebServer
 	GasManager* m_gasManager;
 	
 	unsigned int m_timeoutMillis = 500;
+
+
+	std::vector<ParamChangeListener*> m_paramChangeListeners;
 	
 public:
 
@@ -45,13 +51,17 @@ public:
 		m_wifiServer.begin(port);
 	}
 	
-	void notifyOnParamFound(char* param, int paramLen, char* value, int valueLen)
+	void notifyOnParamFound(String param, String value)
 	{
 		#ifdef DEBUG_PRINT_ON
 		Serial.println(String(param) + "=" + String(value));
 		#endif
-		if(m_gasManager != nullptr)
-			m_gasManager->onGasParamChange(param, paramLen, value, valueLen);
+
+		for (auto& l : m_paramChangeListeners)
+			l->onParamChange(param, value);
+
+		//if(m_gasManager != nullptr)
+		//	m_gasManager->onGasParamChange(param, paramLen, value, valueLen);
 	}
 	
 	int processHeaderLine(char* buf, int len)
@@ -82,7 +92,7 @@ public:
 				#ifdef DEBUG_PRINT_ON
 				Serial.println("processHeaderLine :: paramValue=" + String(paramValue)); 
 				#endif
-				notifyOnParamFound(paramName, paramNamePos, paramValue, paramValuePos);
+				notifyOnParamFound(String(paramName), String(paramValue));
 				paramNamePos = 0;
 				paramValuePos = 0;
 				
@@ -130,7 +140,7 @@ public:
 				if(valueFound)
 				{
 					paramValue[paramValuePos] = 0;
-					notifyOnParamFound(paramName, paramNamePos, paramValue, paramValuePos);		
+					notifyOnParamFound(String(paramName), String(paramValue));
 					paramCount++;			
 					return paramCount;
 				}
@@ -270,10 +280,21 @@ public:
 			client.println("<label for=\"fname\">Thermal conductivity::</label>");
 			client.println("<input type=\"text\" id=\"tc" + String(i) + "\" name=\"" + gases[i].getName() + "\" value=\"" + String(gases[i].getThermalConductivity(), 6) + "\"></p>");
 		}
+
+		client.println("<hr style=\"height:2px;border-width:0;color:gray;background-color:gray\">");
+		client.println("<label for=\"fname\">WiFi credentials:</label><br>");
+		client.println("<label for=\"fname\">SSID:</label>");
+		client.println("<input type=\"text\"name=\"" + String(c_WIFI_SSID_PARAM_NAME) + "\" value=\"" + g_configurationManager.getWifiSsid() + "\"></p>");
+		client.println("<label for=\"fname\">PASSWORD:</label>");
+		client.println("<input type=\"text\" name=\"" + String(c_WIFI_PASSWORD_PARAM_NAME) + "\" value=\"" + g_configurationManager.getWifiPassword() + "\"><br>");
+
 		client.println("<input type=\"submit\" value=\"Modify\" method=\"GET\">");
 		client.println("</form>");
+
 		client.println("</body></html>");
 		// The HTTP response ends with another blank line
 		client.println();
 	}
+
+	void addParamChangeListener(ParamChangeListener* l) { m_paramChangeListeners.push_back(l); }
 };

@@ -7,6 +7,9 @@ class GasManager;
 class GasMenuItem;
 class RunMenuItem;
 class SleepTimer;
+class DataLogger;
+class DataSource;
+class TimeSync;
 
 class MenuRenderer
 {
@@ -43,12 +46,12 @@ public:
 
 class SSD1306RunMenuRenderer : public SSD1306MenuRenderer
 {
-	Adafruit_ADS1115* 		m_ads1115;
+	DataSource* 		m_dataSource;
 	GasManager*				m_gasManager;
 	
 public:
 
-	SSD1306RunMenuRenderer(SSD1306Wire* display, Adafruit_ADS1115* ads1115, GasManager* gasManager);
+	SSD1306RunMenuRenderer(SSD1306Wire* display, DataSource* dataSource, GasManager* gasManager);
 
 	void render(Menu* menu);
 };
@@ -61,6 +64,60 @@ public:
 	
 	SSD1306SleepTimerMenuRenderer(SSD1306Wire* display, SleepTimer* sleepTimer);
 	
+	void render(Menu* menu);
+};
+
+class SSD1306FlashLoggerMenuRenderer : public SSD1306MenuRenderer
+{
+	DataLogger* m_dataLogger;
+	
+public:	
+	
+	SSD1306FlashLoggerMenuRenderer(SSD1306Wire* display, DataLogger* dataLogger);
+	
+	void render(Menu* menu);
+};
+
+class SSD1306WiFiDumpMenuRenderer : public SSD1306MenuRenderer
+{
+	DataLogger* m_dataLogger;
+
+public:
+
+	SSD1306WiFiDumpMenuRenderer(SSD1306Wire* display, DataLogger* dataLogger);
+
+	void render(Menu* menu);
+};
+
+class SSD1306WiFiRealTimeDumpMenuRenderer : public SSD1306MenuRenderer
+{
+	DataLogger* m_dataLogger;
+
+public:
+
+	SSD1306WiFiRealTimeDumpMenuRenderer(SSD1306Wire* display, DataLogger* dataLogger);
+
+	void render(Menu* menu);
+};
+
+class SSD1306NTPSyncMenuRenderer : public SSD1306MenuRenderer
+{
+	TimeSync* m_timeSync;
+
+public:
+
+	SSD1306NTPSyncMenuRenderer(SSD1306Wire* display, TimeSync* timeSync);
+
+	void render(Menu* menu);
+};
+
+class SSD1306ShowTimeMenuRenderer : public SSD1306MenuRenderer
+{
+
+public:
+
+	SSD1306ShowTimeMenuRenderer(SSD1306Wire* display);
+
 	void render(Menu* menu);
 };
 

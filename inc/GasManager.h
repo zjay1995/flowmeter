@@ -6,13 +6,7 @@
 
 #include "ConfigurationManager.h"
 
-class GasParamChangeListener
-{
-public:
 
-	virtual void onGasParamChange(char* param, int paramLen, char* value, int valueLen)=0;
-	
-};
 
 class Gas
 {
@@ -38,7 +32,7 @@ public:
 
 
 
-class GasManager : public GasParamChangeListener
+class GasManager : public ParamChangeListener
 {
 	std::vector<Gas> m_gases;
 	
@@ -100,42 +94,33 @@ public:
 	
 	std::vector<Gas>& getAllGases() { return m_gases; }
 	
-	void setGasThermalConductivity(String gasName, double tc)
+	void onParamChange(String param, String value)
 	{
-		for(auto& gas : m_gases)
-		{
-			if(gas.getName().equals(gasName))
-			{
-				gas.setThermalConductivity(tc);
-				Serial.println("Setting TC for gas: " + gas.getName() + " " + String(tc));
-				m_configurationManager->saveGasThermalConductivity(gas.getName(), tc); 
-				break;
-			}
-		}
-	}
-	
-	void onGasParamChange(char* param, int paramLen, char* value, int valueLen)
-	{
-		String szParam(param);
-		String szValue(value);
+
+		Serial.println("onGasParamChange: " + param + "=" + value);
 		
-		Serial.println("onGasParamChange: " + szParam + "=" + szValue);
-		
-		if(szParam.equals(String("SLOPE")))
+		if(param.equals(String("SLOPE")))
 		{
-			m_slope = szValue.toDouble();
-			Serial.println("Setting SLOPE: " + szValue);
-			m_configurationManager->saveSlopeToEEPROM(m_slope);
+			m_slope = value.toDouble();
+			Serial.println("Setting SLOPE: " + value);
 		}
-		if(szParam.equals(String("INTECEPT")))
+		else if(param.equals(String("INTECEPT")))
 		{
-			m_intercept = szValue.toDouble();
-			Serial.println("Setting INTECEPT: " + szValue);
-			m_configurationManager->saveInterceptToEEPROM(m_intercept);
+			m_intercept = value.toDouble();
+			Serial.println("Setting INTECEPT: " + value);
 		}
 		else
 		{
-			setGasThermalConductivity(szParam, szValue.toDouble());
+			for (auto& gas : m_gases)
+			{
+				if (gas.getName().equals(param))
+				{
+					double tc = value.toDouble();
+					gas.setThermalConductivity(tc);
+					Serial.println("Setting TC for gas: " + gas.getName() + " " + String(tc));
+					break;
+				}
+			}
 		}
 	}
 	

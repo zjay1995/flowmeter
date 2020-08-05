@@ -2,17 +2,25 @@
 #include "SSD1306.h"
 #include <WiFi.h>
 #include <vector>
+
+#include "inc/TimeSync.h"
 #include "inc/GasManager.h"
 #include "inc/Button.h"
 #include "inc/Menu.h"
 #include "inc/MenuRenderer.h"
 #include "inc/WebServer.h"
 #include "inc/SleepTimer.h"
-#include "inc/ConfigurationManager.h"
+#include "inc/Globals.h"
+#include "inc/DataLogger.h"
+#include "inc/DataSource.h"
 
 using namespace std;
 
 #define MAX_SCCM 5000
+
+#define wifi_ssid "1134ea"
+#define wifi_password "DNm11i223344"
+
 
 GasManager g_gasManager(1.73231201, -2.054456771);
 
@@ -25,13 +33,14 @@ SSD1306 display(0x3c, 5, 4);
 
 SleepTimer g_sleepTimer(&display);
 
-ConfigurationManager g_configurationManager(&g_gasManager, &g_sleepTimer);
+DataLogger g_dataLogger;
+
+TimeSync g_timeSync;
 
 const char* ssid     = "ESP32-Access-Point";
 const char* password = "91239";
 
 volatile bool CALIBRATION_MODE = false;
-
 
 void setupWiFi() {
 	Serial.print("Setting AP (Access Point)…");
@@ -56,6 +65,9 @@ void setup() {
 	// ADC
 	ads1115.begin();
 	ads1115.setGain(GAIN_ONE);
+	AnalogSourceInput* ads1115AnalogSourceInput = new ADS1115AnalogSourceInput(&ads1115);
+	DataSource* dataSource = new DataSource(&g_gasManager, ads1115AnalogSourceInput);
+
 	// Display
 	display.init();
 	display.flipScreenVertically();
@@ -74,9 +86,15 @@ void setup() {
 	/// Menus	
 	//
 	MenuRenderer* gasMenuRenderer = new SSD1306GasMenuRenderer(&display);	
-	MenuRenderer* runMenuRenderer = new SSD1306RunMenuRenderer(&display, &ads1115, &g_gasManager);
+	MenuRenderer* runMenuRenderer = new SSD1306RunMenuRenderer(&display, dataSource, &g_gasManager);
 	MenuRenderer* sleepTimerMenuRenderer = new SSD1306SleepTimerMenuRenderer(&display, &g_sleepTimer);		
-		
+	MenuRenderer* flashLoggerMenuRenderer = new SSD1306FlashLoggerMenuRenderer(&display, &g_dataLogger);		
+	MenuRenderer* wifiDumpMenuRenderer = new SSD1306WiFiDumpMenuRenderer(&display, &g_dataLogger);
+	MenuRenderer* wifiRealTimeDumpMenuRenderer = new SSD1306WiFiRealTimeDumpMenuRenderer(&display, &g_dataLogger);
+	MenuRenderer* NTPSyncMenuRenderer = new SSD1306NTPSyncMenuRenderer(&display, &g_timeSync);
+	MenuRenderer* showTimeMenuRenderer = new SSD1306ShowTimeMenuRenderer(&display);
+
+
 	vector<Menu*> runMenus;
 	
 	runMenus.push_back(new RunMenuItem("RUN", "RUN", &g_gasManager, runMenuRenderer));
@@ -96,7 +114,7 @@ void setup() {
 	
 	// Timer Menus
 	vector<Menu*> sleepTimerMenus;
-	
+/*	
 	sleepTimerMenus.push_back(new SleepTimerMenuItem("5", "TIMER",  0, &g_sleepTimer, sleepTimerMenuRenderer));
 	sleepTimerMenus.push_back(new SleepTimerMenuItem("60", "TIMER", 1, &g_sleepTimer, sleepTimerMenuRenderer));
 	sleepTimerMenus.push_back(new SleepTimerMenuItem("120", "TIMER", 2, &g_sleepTimer, sleepTimerMenuRenderer));
@@ -104,12 +122,33 @@ void setup() {
 	sleepTimerMenus.push_back(new SleepTimerMenuItem("CONTINUOUS", "TIMER", 4, &g_sleepTimer, sleepTimerMenuRenderer));
 	
 	CompositeMenu* timerMenu = new CompositeMenu("TIMER","Main Menu" , sleepTimerMenus);	
+	*/
+	// DataLogger Menus
+	vector<Menu*> dataLoggerMenus;
 	
+	dataLoggerMenus.push_back(new DataLoggerFlashStoreMenuItem("FLASH LOGGER", "DATALOGGER", 	&g_dataLogger, flashLoggerMenuRenderer));
+	dataLoggerMenus.push_back(new WiFiDumpMenuItem("WIFI DUMP", "DATALOGGER", 				 	&g_dataLogger, wifiDumpMenuRenderer));
+	dataLoggerMenus.push_back(new WiFiRealTimeDumpMenuItem("WIFI REAL-TIME DUMP", "DATALOGGER", &g_dataLogger, wifiRealTimeDumpMenuRenderer));
+	
+	
+	CompositeMenu* dataLoggerMenu = new CompositeMenu("DATALOGGER", "Main Menu" , dataLoggerMenus);		
+	
+	// DateTime menu
+	vector<Menu*> dateTimeMenus;
+	
+	dateTimeMenus.push_back(new NTPSyncMenuItem("NTP Sync", "DATETIME", &g_timeSync, NTPSyncMenuRenderer));
+	dateTimeMenus.push_back(new ShowTimeMenuItem("Current DateTime", "DATETIME", showTimeMenuRenderer));
+
+	CompositeMenu* dateTimeMenu = new CompositeMenu("DATETIME", "Main Menu" , dateTimeMenus);		
+
+////////////////////////////////////	
 	vector<Menu*> horizontalMenus;
 	
 	horizontalMenus.push_back(runMenu);
 	horizontalMenus.push_back(libraryMenu);
-	horizontalMenus.push_back(timerMenu);
+//	horizontalMenus.push_back(timerMenu);
+	horizontalMenus.push_back(dataLoggerMenu);
+	horizontalMenus.push_back(dateTimeMenu);
 	Serial.println("horizontal menu " + String(horizontalMenus.size())); 
 	CompositeMenu* verticalMenu = new CompositeMenu("Main Menu", "", horizontalMenus);
 	
@@ -122,8 +161,20 @@ void setup() {
 	g_webServer.init(&g_gasManager);
 	g_sleepTimer.init(&g_configurationManager);
 	
+	g_dataLogger.init(dataSource, &g_gasManager);
+	
+	g_webServer.addParamChangeListener((ParamChangeListener*)&g_configurationManager);
+	g_webServer.addParamChangeListener((ParamChangeListener*)&g_gasManager);
+	
+	g_configurationManager.addParamChangeListener((ParamChangeListener*)&g_timeSync);
+	g_configurationManager.addParamChangeListener((ParamChangeListener*)&g_gasManager);
+	g_configurationManager.addParamChangeListener((ParamChangeListener*)g_dataLogger.getMqttFlashPublisher());
+	g_configurationManager.addParamChangeListener((ParamChangeListener*)g_dataLogger.getMqttRealTimePublisher());
+	
 	g_configurationManager.init();
 	g_configurationManager.loadFromEEPROM();
+	
+	g_timeSync.initTimeFromRTC();
 }
 
 void setupButtons()
@@ -170,6 +221,18 @@ void setupButtons()
 		g_sleepTimer.resetIdleCounter();
 		
 		Serial.println("PRESS CALIBRATION");
+		
+		if(CALIBRATION_MODE)
+		{
+			Serial.println("WIFI OFF START");
+			WiFi.mode(WIFI_OFF);
+			while(WiFi.getMode() != WIFI_OFF)
+				delay(10);
+			Serial.println("WIFI OFF END");
+			g_webServer.stop();
+			Serial.println("g_webServer STOP");
+		}
+
 		CALIBRATION_MODE = !CALIBRATION_MODE;		
 	});
 	
@@ -181,21 +244,11 @@ void loop()
 	ButtonPressDetector::handleTick();
 	
 	g_sleepTimer.handleTick();	
+	g_dataLogger.handleTick();
 	
 	if(!CALIBRATION_MODE)
 	{
-		if(WiFi.getMode() != WIFI_OFF) {
-			Serial.println("WIFI OFF START");
-			WiFi.mode(WIFI_OFF);
-			while(WiFi.getMode() != WIFI_OFF)
-				delay(10);
-			Serial.println("WIFI OFF END");
-			g_webServer.stop();
-			Serial.println("g_webServer STOP");
-		}
-		
 		g_mainMenu->render();
-		
 	}
 	else
 	{
