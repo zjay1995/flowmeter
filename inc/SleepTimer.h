@@ -2,16 +2,12 @@
 
 #include <array>
 
-#include "SSD1306.h"
-
 #define SSD1306_DISPLAYOFF          0xAE
 
 #include "ConfigurationManager.h"
 
 class SleepTimer
 {
-	SSD1306Wire* 			m_display;
-	
 	//int m_intervalArray[] = {1,2,5,-1};
 	std::array <int,5> m_intervalArray{{5,60,120,360,-1}};
 	int m_selectedIndex = 0;
@@ -22,7 +18,7 @@ class SleepTimer
 	
 public:
 
-	SleepTimer(SSD1306Wire* display) : m_display(display)
+	SleepTimer()
 	{
 		m_selectedIndex = 4;
 	}
@@ -93,11 +89,15 @@ public:
 			Serial.println("SleepTimer deep_sleep!");	
 			Serial.flush();
 
+
+			#ifdef USE_SSD1306_DISPLAY
+			//Power off SSD1306 before going to deep sleep
 			Wire.beginTransmission(0x3C);
 			Wire.write(0x80);
 			Wire.write(SSD1306_DISPLAYOFF);
 			Wire.endTransmission();
 			
+			#endif
 			esp_deep_sleep_start();					
 		}			
 	}

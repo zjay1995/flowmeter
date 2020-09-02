@@ -2,6 +2,7 @@
 
 class Menu;
 class SSD1306Wire;
+class OLED;
 class Adafruit_ADS1115;
 class GasManager;
 class GasMenuItem;
@@ -10,6 +11,7 @@ class SleepTimer;
 class DataLogger;
 class DataSource;
 class TimeSync;
+
 
 class MenuRenderer
 {
@@ -120,5 +122,112 @@ public:
 
 	void render(Menu* menu);
 };
+
+
+///////////
+//// SH1106
+///////////
+
+class SH1106MenuRenderer : public MenuRenderer
+{
+protected:
+	OLED* m_display;
+
+public:
+
+	SH1106MenuRenderer(OLED* display) : m_display(display)
+	{}
+
+	void render(Menu* menu);
+
+};
+
+class SH1106GasMenuRenderer : public SH1106MenuRenderer
+{
+public:
+
+	SH1106GasMenuRenderer(OLED* display);
+
+	void render(Menu* menu);
+
+};
+
+class SH1106RunMenuRenderer : public SH1106MenuRenderer
+{
+	DataSource* m_dataSource;
+	GasManager* m_gasManager;
+
+public:
+
+	SH1106RunMenuRenderer(OLED* display, DataSource* dataSource, GasManager* gasManager);
+
+	void render(Menu* menu);
+};
+
+class SH1106SleepTimerMenuRenderer : public SH1106MenuRenderer
+{
+	SleepTimer* m_sleepTimer;
+
+public:
+
+	SH1106SleepTimerMenuRenderer(OLED* display, SleepTimer* sleepTimer);
+
+	void render(Menu* menu);
+};
+
+class SH1106FlashLoggerMenuRenderer : public SH1106MenuRenderer
+{
+	DataLogger* m_dataLogger;
+
+public:
+
+	SH1106FlashLoggerMenuRenderer(OLED* display, DataLogger* dataLogger);
+
+	void render(Menu* menu);
+};
+
+class SH1106WiFiDumpMenuRenderer : public SH1106MenuRenderer
+{
+	DataLogger* m_dataLogger;
+
+public:
+
+	SH1106WiFiDumpMenuRenderer(OLED* display, DataLogger* dataLogger);
+
+	void render(Menu* menu);
+};
+
+class SH1106WiFiRealTimeDumpMenuRenderer : public SH1106MenuRenderer
+{
+	DataLogger* m_dataLogger;
+
+public:
+
+	SH1106WiFiRealTimeDumpMenuRenderer(OLED* display, DataLogger* dataLogger);
+
+	void render(Menu* menu);
+};
+
+class SH1106NTPSyncMenuRenderer : public SH1106MenuRenderer
+{
+	TimeSync* m_timeSync;
+
+public:
+
+	SH1106NTPSyncMenuRenderer(OLED* display, TimeSync* timeSync);
+
+	void render(Menu* menu);
+};
+
+class SH1106ShowTimeMenuRenderer : public SH1106MenuRenderer
+{
+
+public:
+
+	SH1106ShowTimeMenuRenderer(OLED* display);
+
+	void render(Menu* menu);
+};
+
 
 

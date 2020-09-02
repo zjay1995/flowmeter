@@ -1,5 +1,7 @@
 #include <Adafruit_ADS1015.h>
-#include "SSD1306.h"
+#include <SSD1306.h>
+#include <oled.h>
+
 #include <WiFi.h>
 #include <vector>
 
@@ -16,6 +18,11 @@
 
 using namespace std;
 
+
+//#define USE_SSD1306_DISPLAY
+#define USE_SH1106_DISPLAY
+
+
 #define MAX_SCCM 5000
 
 #define wifi_ssid "1134ea"
@@ -29,9 +36,16 @@ WebServer g_webServer;
 CompositeMenu* g_mainMenu = nullptr; 
 
 Adafruit_ADS1115 ads1115;
-SSD1306 display(0x3c, 5, 4);
 
-SleepTimer g_sleepTimer(&display);
+#ifdef USE_SSD1306_DISPLAY
+SSD1306 display(0x3c, 5, 4);
+#endif
+
+#ifdef USE_SH1106_DISPLAY
+OLED display=OLED(4,5,16);
+#endif
+
+SleepTimer g_sleepTimer;
 
 DataLogger g_dataLogger;
 
@@ -68,11 +82,6 @@ void setup() {
 	AnalogSourceInput* ads1115AnalogSourceInput = new ADS1115AnalogSourceInput(&ads1115);
 	DataSource* dataSource = new DataSource(&g_gasManager, ads1115AnalogSourceInput);
 
-	// Display
-	display.init();
-	display.flipScreenVertically();
-	display.setFont(ArialMT_Plain_16);
-
 	// Gas Manager
 	g_gasManager.setConfigurationManager(&g_configurationManager);
 	
@@ -85,6 +94,14 @@ void setup() {
 	//	
 	/// Menus	
 	//
+	
+	#ifdef USE_SSD1306_DISPLAY
+	
+	// Display
+	display.init();
+	display.flipScreenVertically();
+	display.setFont(ArialMT_Plain_16);
+	
 	MenuRenderer* gasMenuRenderer = new SSD1306GasMenuRenderer(&display);	
 	MenuRenderer* runMenuRenderer = new SSD1306RunMenuRenderer(&display, dataSource, &g_gasManager);
 	MenuRenderer* sleepTimerMenuRenderer = new SSD1306SleepTimerMenuRenderer(&display, &g_sleepTimer);		
@@ -93,7 +110,22 @@ void setup() {
 	MenuRenderer* wifiRealTimeDumpMenuRenderer = new SSD1306WiFiRealTimeDumpMenuRenderer(&display, &g_dataLogger);
 	MenuRenderer* NTPSyncMenuRenderer = new SSD1306NTPSyncMenuRenderer(&display, &g_timeSync);
 	MenuRenderer* showTimeMenuRenderer = new SSD1306ShowTimeMenuRenderer(&display);
-
+	#endif
+	
+	#ifdef USE_SH1106_DISPLAY
+	
+	// Display
+	display.begin();
+	
+	MenuRenderer* gasMenuRenderer = new SH1106GasMenuRenderer(&display);	
+	MenuRenderer* runMenuRenderer = new SH1106RunMenuRenderer(&display, dataSource, &g_gasManager);
+	MenuRenderer* sleepTimerMenuRenderer = new SH1106SleepTimerMenuRenderer(&display, &g_sleepTimer);		
+	MenuRenderer* flashLoggerMenuRenderer = new SH1106FlashLoggerMenuRenderer(&display, &g_dataLogger);		
+	MenuRenderer* wifiDumpMenuRenderer = new SH1106WiFiDumpMenuRenderer(&display, &g_dataLogger);
+	MenuRenderer* wifiRealTimeDumpMenuRenderer = new SH1106WiFiRealTimeDumpMenuRenderer(&display, &g_dataLogger);
+	MenuRenderer* NTPSyncMenuRenderer = new SH1106NTPSyncMenuRenderer(&display, &g_timeSync);
+	MenuRenderer* showTimeMenuRenderer = new SH1106ShowTimeMenuRenderer(&display);
+	#endif
 
 	vector<Menu*> runMenus;
 	
@@ -258,18 +290,24 @@ void loop()
 		{
 			setupWiFi();
 		}
-		//Serial.println("g_webServer BEFORE TICK");
+
 		g_webServer.handleTick();
-		//Serial.println("g_webServer AFTER TICK");
+
+		#ifdef USE_SSD1306_DISPLAY
 		display.clear();
 		display.setColor(WHITE);
 		display.setTextAlignment(TEXT_ALIGN_CENTER);
-
 		display.drawString(64, 0,"CALIBRATION MODE");
-		display.drawString(64, 20,WiFi.softAPIP().toString());
-	//	display.drawString(64, 30,"SLOPE:" + String(SLOPE));
-	//	display.drawString(64, 40,"INTERCEPT:" + String(INTERCEPT));
+		display.drawString(64, 20,WiFi.softAPIP().toString().c_str());
 		display.display();
+		#endif
+		
+		#ifdef USE_SH1106_DISPLAY
+		display.draw_string(64, 0,"CALIBRATION MODE");
+		display.draw_string(64, 20,WiFi.softAPIP().toString().c_str());
+		display.display();
+		#endif
+		
 	} //END IS_CAL IF
 	delay(10);
 }
