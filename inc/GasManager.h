@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 #include "ConfigurationManager.h"
-
+#include "Globals.h"
 
 
 class Gas
@@ -99,15 +99,15 @@ public:
 
 		Serial.println("onGasParamChange: " + param + "=" + value);
 		
-		if(param.equals(String("SLOPE")))
+		if(param.equals(c_SLOPE_PARAM_NAME))
 		{
 			m_slope = value.toDouble();
 			Serial.println("Setting SLOPE: " + value);
 		}
-		else if(param.equals(String("INTECEPT")))
+		else if(param.equals(c_INTERCEPT_PARAM_NAME))
 		{
 			m_intercept = value.toDouble();
-			Serial.println("Setting INTECEPT: " + value);
+			Serial.println("Setting INTERCEPT: " + value);
 		}
 		else
 		{
