@@ -5,8 +5,8 @@
 #include "inc/DataSource.h"
 #include <Adafruit_ADS1015.h>
 #include "SSD1306.h"
-#include <oled.h>
 #include <Arduino.h>
+#include <U8g2lib.h>
 
 SSD1306GasMenuRenderer::SSD1306GasMenuRenderer(SSD1306Wire* display) : SSD1306MenuRenderer(display)
 																	 
@@ -211,27 +211,27 @@ void SSD1306ShowTimeMenuRenderer::render(Menu* menu)
 /////////////////////////
 
 ///////////
-//// SH1106
+//// SSD1327
 ///////////
 
-SH1106GasMenuRenderer::SH1106GasMenuRenderer(OLED* display) : SH1106MenuRenderer(display)
+SSD1327GasMenuRenderer::SSD1327GasMenuRenderer(U8G2_SSD1327_MIDAS_128X128_F_4W_SW_SPI* display) : SSD1327MenuRenderer(display)
 {
 
 }
 
 
 
-void SH1106GasMenuRenderer::render(Menu* menu)
+void SSD1327GasMenuRenderer::render(Menu* menu)
 {
-	m_display->clear();
-	m_display->draw_string(64, 0, menu->getParentName().c_str());
-	m_display->draw_line(10, 24, 256, 24);
-	m_display->draw_string(64, 30, menu->getName().c_str());
-	m_display->display();
+	m_display->clearBuffer();
+	m_display->drawStr(64, 0, menu->getParentName().c_str());
+	m_display->drawLine(10, 24, 256, 24);
+	m_display->drawStr(64, 30, menu->getName().c_str());
+	m_display->sendBuffer();
 
 }
 
-SH1106RunMenuRenderer::SH1106RunMenuRenderer(OLED* display, DataSource* dataSource, GasManager* gasManager) : SH1106MenuRenderer(display),
+SSD1327RunMenuRenderer::SSD1327RunMenuRenderer(U8G2_SSD1327_MIDAS_128X128_F_4W_SW_SPI* display, DataSource* dataSource, GasManager* gasManager) : SSD1327MenuRenderer(display),
 m_dataSource(dataSource),
 m_gasManager(gasManager)
 {
@@ -239,7 +239,7 @@ m_gasManager(gasManager)
 
 }
 
-void SH1106RunMenuRenderer::render(Menu* menu)
+void SSD1327RunMenuRenderer::render(Menu* menu)
 {
 	const float multiplier = 0.125F; //GAIN 1
 
@@ -250,17 +250,17 @@ void SH1106RunMenuRenderer::render(Menu* menu)
 
 	Gas& selectedGas = m_gasManager->getSelectedGas();
 
-	m_display->clear();
-	m_display->draw_string(64, 0, String(selectedGas.getName() + " " + String(sensor_val) + "sccm").c_str());
-	m_display->draw_line(10, 24, 256, 24);
-	m_display->draw_string(64, 30, String(String(m_dataSource->getRawMiliVolts()) + "mV").c_str());
-	m_display->display();
+	m_display->clearBuffer();
+	m_display->drawStr(64, 0, String(selectedGas.getName() + " " + String(sensor_val) + "sccm").c_str());
+	m_display->drawLine(10, 24, 256, 24);
+	m_display->drawStr(64, 30, String(String(m_dataSource->getRawMiliVolts()) + "mV").c_str());
+	m_display->sendBuffer();
 
 }
 
 ///////////////////////////
 
-SH1106SleepTimerMenuRenderer::SH1106SleepTimerMenuRenderer(OLED* display, SleepTimer* sleepTimer) : SH1106MenuRenderer(display),
+SSD1327SleepTimerMenuRenderer::SSD1327SleepTimerMenuRenderer(U8G2_SSD1327_MIDAS_128X128_F_4W_SW_SPI* display, SleepTimer* sleepTimer) : SSD1327MenuRenderer(display),
 m_sleepTimer(sleepTimer)
 {
 
@@ -271,103 +271,103 @@ m_sleepTimer(sleepTimer)
 
 }
 
-void SH1106SleepTimerMenuRenderer::render(Menu* menu)
+void SSD1327SleepTimerMenuRenderer::render(Menu* menu)
 {
-	m_display->clear();
-	m_display->draw_string(64, 0, "TIMER SLEEP");
-	m_display->draw_line(10, 24, 256, 24);
-	m_display->draw_string(64, 30, menu->getName().c_str());
-	m_display->display();
+	m_display->clearBuffer();
+	m_display->drawStr(64, 0, "TIMER SLEEP");
+	m_display->drawLine(10, 24, 256, 24);
+	m_display->drawStr(64, 30, menu->getName().c_str());
+	m_display->sendBuffer();
 }
 
 ///////////////////////////////
 
-SH1106FlashLoggerMenuRenderer::SH1106FlashLoggerMenuRenderer(OLED* display, DataLogger* dataLogger) : SH1106MenuRenderer(display),
+SSD1327FlashLoggerMenuRenderer::SSD1327FlashLoggerMenuRenderer(U8G2_SSD1327_MIDAS_128X128_F_4W_SW_SPI* display, DataLogger* dataLogger) : SSD1327MenuRenderer(display),
 m_dataLogger(dataLogger)
 {
 
 
 }
 
-void SH1106FlashLoggerMenuRenderer::render(Menu* menu)
+void SSD1327FlashLoggerMenuRenderer::render(Menu* menu)
 {
-	m_display->clear();
-	m_display->draw_string(64, 0, "DATA LOGGER");
-	m_display->draw_line(10, 24, 256, 24);
-	m_display->draw_string(64, 30, menu->getName().c_str());
-	m_display->draw_string(64, 40, m_dataLogger->isFlashStoreSessionRunning() ? "Started" : "Idle");
-	m_display->display();
+	m_display->clearBuffer();
+	m_display->drawStr(64, 0, "DATA LOGGER");
+	m_display->drawLine(10, 24, 256, 24);
+	m_display->drawStr(64, 30, menu->getName().c_str());
+	m_display->drawStr(64, 40, m_dataLogger->isFlashStoreSessionRunning() ? "Started" : "Idle");
+	m_display->sendBuffer();
 
 
 }
 
 ///////////////////////////////
 
-SH1106WiFiDumpMenuRenderer::SH1106WiFiDumpMenuRenderer(OLED* display, DataLogger* dataLogger) : SH1106MenuRenderer(display),
+SSD1327WiFiDumpMenuRenderer::SSD1327WiFiDumpMenuRenderer(U8G2_SSD1327_MIDAS_128X128_F_4W_SW_SPI* display, DataLogger* dataLogger) : SSD1327MenuRenderer(display),
 m_dataLogger(dataLogger)
 {
 
 
 }
 
-void SH1106WiFiDumpMenuRenderer::render(Menu* menu)
+void SSD1327WiFiDumpMenuRenderer::render(Menu* menu)
 {
-	m_display->clear();
-	m_display->draw_string(64, 0, "WIFI DATA DUMP");
-	m_display->draw_line(10, 24, 256, 24);
-	m_display->draw_string(64, 30, menu->getName().c_str());
-	m_display->draw_string(64, 40, m_dataLogger->isWiFiDumpRunning() ? "Started" : "Idle");
-	m_display->display();
+	m_display->clearBuffer();
+	m_display->drawStr(64, 0, "WIFI DATA DUMP");
+	m_display->drawLine(10, 24, 256, 24);
+	m_display->drawStr(64, 30, menu->getName().c_str());
+	m_display->drawStr(64, 40, m_dataLogger->isWiFiDumpRunning() ? "Started" : "Idle");
+	m_display->sendBuffer();
 
 
 }
 
-SH1106WiFiRealTimeDumpMenuRenderer::SH1106WiFiRealTimeDumpMenuRenderer(OLED* display, DataLogger* dataLogger) : SH1106MenuRenderer(display),
+SSD1327WiFiRealTimeDumpMenuRenderer::SSD1327WiFiRealTimeDumpMenuRenderer(U8G2_SSD1327_MIDAS_128X128_F_4W_SW_SPI* display, DataLogger* dataLogger) : SSD1327MenuRenderer(display),
 m_dataLogger(dataLogger)
 {
 
 
 }
 
-void SH1106WiFiRealTimeDumpMenuRenderer::render(Menu* menu)
+void SSD1327WiFiRealTimeDumpMenuRenderer::render(Menu* menu)
 {
-	m_display->clear();
-	m_display->draw_string(64, 0, "WIFI REAL-TIME DUMP");
-	m_display->draw_line(10, 24, 256, 24);
-	m_display->draw_string(64, 30, menu->getName().c_str());
-	m_display->draw_string(64, 40, m_dataLogger->isWiFiDumpRunning() ? "Started" : "Idle");
-	m_display->display();
+	m_display->clearBuffer();
+	m_display->drawStr(64, 0, "WIFI REAL-TIME DUMP");
+	m_display->drawLine(10, 24, 256, 24);
+	m_display->drawStr(64, 30, menu->getName().c_str());
+	m_display->drawStr(64, 40, m_dataLogger->isWiFiDumpRunning() ? "Started" : "Idle");
+	m_display->sendBuffer();
 
 
 }
 
-SH1106NTPSyncMenuRenderer::SH1106NTPSyncMenuRenderer(OLED* display, TimeSync* timeSync) : SH1106MenuRenderer(display),
+SSD1327NTPSyncMenuRenderer::SSD1327NTPSyncMenuRenderer(U8G2_SSD1327_MIDAS_128X128_F_4W_SW_SPI* display, TimeSync* timeSync) : SSD1327MenuRenderer(display),
 m_timeSync(timeSync)
 {
 
 }
 
-void SH1106NTPSyncMenuRenderer::render(Menu* menu)
+void SSD1327NTPSyncMenuRenderer::render(Menu* menu)
 {
-	m_display->clear();
-	m_display->draw_string(64, 0, "NTP Sync");
-	m_display->draw_line(10, 24, 256, 24);
-	m_display->draw_string(64, 30, menu->getName().c_str());
-	m_display->draw_string(64, 40, m_timeSync->isNTCSyncRunning() == true ? "In Progress!" : "Idle");
-	m_display->display();
+	m_display->clearBuffer();
+	m_display->drawStr(64, 0, "NTP Sync");
+	m_display->drawLine(10, 24, 256, 24);
+	m_display->drawStr(64, 30, menu->getName().c_str());
+	m_display->drawStr(64, 40, m_timeSync->isNTCSyncRunning() == true ? "In Progress!" : "Idle");
+	m_display->sendBuffer();
 
 }
 
-SH1106ShowTimeMenuRenderer::SH1106ShowTimeMenuRenderer(OLED* display) : SH1106MenuRenderer(display)
+SSD1327ShowTimeMenuRenderer::SSD1327ShowTimeMenuRenderer(U8G2_SSD1327_MIDAS_128X128_F_4W_SW_SPI* display) : SSD1327MenuRenderer(display)
 {
 
 }
 
-void SH1106ShowTimeMenuRenderer::render(Menu* menu)
+void SSD1327ShowTimeMenuRenderer::render(Menu* menu)
 {
 	int64_t startMicros = esp_timer_get_time();
 
-	m_display->clear();
+	m_display->clearBuffer();
 
 	struct tm timeinfo;
 	getLocalTime(&timeinfo, 10);
@@ -381,11 +381,11 @@ void SH1106ShowTimeMenuRenderer::render(Menu* menu)
 	strftime(dateString, 30, "%b %d %y", &timeinfo);
 	strftime(timeString, 30, "%H:%M:%S", &timeinfo);
 
-	m_display->draw_string(64, 0, "Current DateTime");
-	m_display->draw_line(10, 24, 256, 24);
-	m_display->draw_string(64, 28, String(dateString).c_str());
-	m_display->draw_string(64, 45, String(timeString).c_str());
-	m_display->display();
+	m_display->drawStr(64, 0, "Current DateTime");
+	m_display->drawLine(10, 24, 256, 24);
+	m_display->drawStr(64, 28, String(dateString).c_str());
+	m_display->drawStr(64, 45, String(timeString).c_str());
+	m_display->sendBuffer();
 
 
 

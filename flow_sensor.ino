@@ -1,6 +1,7 @@
 #include <Adafruit_ADS1015.h>
 #include <SSD1306.h>
-#include <oled.h>
+#include <U8g2lib.h>
+#include <Wire.h>
 
 #include <WiFi.h>
 #include <vector>
@@ -20,7 +21,7 @@ using namespace std;
 
 
 //#define USE_SSD1306_DISPLAY
-#define USE_SH1106_DISPLAY
+#define USE_SSD1327_DISPLAY
 
 
 #define MAX_SCCM 5000
@@ -41,8 +42,8 @@ Adafruit_ADS1115 ads1115;
 SSD1306 display(0x3c, 5, 4);
 #endif
 
-#ifdef USE_SH1106_DISPLAY
-OLED display=OLED(4,5,16);
+#ifdef USE_SSD1327_DISPLAY
+U8G2_SSD1327_MIDAS_128X128_F_4W_SW_SPI display(U8G2_R0, /* clock=*/ 27, /* data=*/ 26, /* cs=*/ 25, /* dc=*/ 33, /* reset=*/ 32);
 #endif
 
 SleepTimer g_sleepTimer;
@@ -52,7 +53,7 @@ DataLogger g_dataLogger;
 TimeSync g_timeSync;
 
 const char* ssid     = "ESP32-Access-Point";
-const char* password = "91239";
+const char* password = "Polaroid1";
 
 volatile bool CALIBRATION_MODE = false;
 
@@ -112,19 +113,19 @@ void setup() {
 	MenuRenderer* showTimeMenuRenderer = new SSD1306ShowTimeMenuRenderer(&display);
 	#endif
 	
-	#ifdef USE_SH1106_DISPLAY
+	#ifdef USE_SSD1327_DISPLAY
 	
 	// Display
 	display.begin();
 	
-	MenuRenderer* gasMenuRenderer = new SH1106GasMenuRenderer(&display);	
-	MenuRenderer* runMenuRenderer = new SH1106RunMenuRenderer(&display, dataSource, &g_gasManager);
-	MenuRenderer* sleepTimerMenuRenderer = new SH1106SleepTimerMenuRenderer(&display, &g_sleepTimer);		
-	MenuRenderer* flashLoggerMenuRenderer = new SH1106FlashLoggerMenuRenderer(&display, &g_dataLogger);		
-	MenuRenderer* wifiDumpMenuRenderer = new SH1106WiFiDumpMenuRenderer(&display, &g_dataLogger);
-	MenuRenderer* wifiRealTimeDumpMenuRenderer = new SH1106WiFiRealTimeDumpMenuRenderer(&display, &g_dataLogger);
-	MenuRenderer* NTPSyncMenuRenderer = new SH1106NTPSyncMenuRenderer(&display, &g_timeSync);
-	MenuRenderer* showTimeMenuRenderer = new SH1106ShowTimeMenuRenderer(&display);
+	MenuRenderer* gasMenuRenderer = new SSD1327GasMenuRenderer(&display);	
+	MenuRenderer* runMenuRenderer = new SSD1327RunMenuRenderer(&display, dataSource, &g_gasManager);
+	MenuRenderer* sleepTimerMenuRenderer = new SSD1327SleepTimerMenuRenderer(&display, &g_sleepTimer);		
+	MenuRenderer* flashLoggerMenuRenderer = new SSD1327FlashLoggerMenuRenderer(&display, &g_dataLogger);		
+	MenuRenderer* wifiDumpMenuRenderer = new SSD1327WiFiDumpMenuRenderer(&display, &g_dataLogger);
+	MenuRenderer* wifiRealTimeDumpMenuRenderer = new SSD1327WiFiRealTimeDumpMenuRenderer(&display, &g_dataLogger);
+	MenuRenderer* NTPSyncMenuRenderer = new SSD1327NTPSyncMenuRenderer(&display, &g_timeSync);
+	MenuRenderer* showTimeMenuRenderer = new SSD1327ShowTimeMenuRenderer(&display);
 	#endif
 
 	vector<Menu*> runMenus;
@@ -302,10 +303,11 @@ void loop()
 		display.display();
 		#endif
 		
-		#ifdef USE_SH1106_DISPLAY
-		display.draw_string(64, 0,"CALIBRATION MODE");
-		display.draw_string(64, 20,WiFi.softAPIP().toString().c_str());
-		display.display();
+		#ifdef USE_SSD1327_DISPLAY
+		display.clearBuffer();
+		display.drawStr(64, 0,"CALIBRATION MODE");
+		display.drawStr(64, 20,WiFi.softAPIP().toString().c_str());
+		display.sendBuffer();
 		#endif
 		
 	} //END IS_CAL IF
