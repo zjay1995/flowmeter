@@ -20,8 +20,8 @@
 using namespace std;
 
 
-//#define USE_SSD1306_DISPLAY
-#define USE_SSD1327_DISPLAY
+#define USE_SSD1306_DISPLAY
+//#define USE_SSD1327_DISPLAY
 
 
 #define MAX_SCCM 5000
